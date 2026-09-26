@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>鹈鹕骑单车 - Pelican on a Bicycle</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header & Info -->
+    <header class="game-header">
+      <div class="title-wrap">
+        <h1>🚴‍♂️ 鹈鹕骑单车 <span>Pelican Cruise</span></h1>
+        <p class="subtitle">沿海海滨漫步 · 点击踏板加速，接住海鱼，按车铃！</p>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-badge">
+          <span class="label">骑行里程</span>
+          <span class="value" id="dist-val">0.0 km</span>
+        </div>
+        <div class="stat-badge">
+          <span class="label">时速</span>
+          <span class="value" id="speed-val">15 km/h</span>
+        </div>
+        <div class="stat-badge highlight">
+          <span class="label">大嘴兜鱼</span>
+          <span class="value" id="fish-val">0 🐟</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Interactive Scene Canvas / Viewport -->
+    <main class="viewport" id="viewport">
+      <!-- Sky, clouds, sun/moon, sea, road background layers -->
+      <div class="sky-layer" id="sky-layer">
+        <div class="celestial-body" id="celestial"></div>
+        <div class="cloud-layer" id="clouds"></div>
+        <div class="sea-layer" id="sea">
+          <div class="wave wave1"></div>
+          <div class="wave wave2"></div>
+          <div class="distant-islands"></div>
+          <div class="lighthouse"></div>
+        </div>
+      </div>
+
+      <!-- Scenery items moving: palm trees, lanterns, railings -->
+      <div class="scenery-layer" id="scenery"></div>
+
+      <!-- Road layer -->
+      <div class="road-layer">
+        <div class="road-surface" id="road-surface"></div>
+        <div class="road-curb"></div>
+      </div>
+
+      <!-- Fish collectible spawning layer -->
+      <div class="collectibles-layer" id="collectibles"></div>
+
+      <!-- Floating notification messages (cheers, +1 fish, etc.) -->
+      <div class="notifications-layer" id="notifications"></div>
+
+      <!-- Main Pelican on Bicycle SVG Animation Character -->
+      <div class="pelican-bike-container" id="pelican-bike">
+        <svg viewBox="0 0 420 320" class="pelican-svg" id="pelican-svg" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- Filters & Gradients -->
+            <linearGradient id="pouchGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ff9a44" />
+              <stop offset="100%" stop-color="#e65100" />
+            </linearGradient>
+            <linearGradient id="beakGrad" x1="0%" y1="0%" x2="100%" y2="50%">
+              <stop offset="0%" stop-color="#ffca28" />
+              <stop offset="100%" stop-color="#f57c00" />
+            </linearGradient>
+            <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00e5ff" />
+              <stop offset="100%" stop-color="#0091ea" />
+            </linearGradient>
+            <linearGradient id="wheelRim" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#78909c" />
+              <stop offset="100%" stop-color="#37474f" />
+            </linearGradient>
+            <radialGradient id="tireGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="70%" stop-color="#263238" />
+              <stop offset="100%" stop-color="#102027" />
+            </radialGradient>
+            <filter id="shadowFilter" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="8" stdDeviation="6" flood-opacity="0.25"/>
+            </filter>
+          </defs>
+
+          <!-- Shadow under bike and wheels -->
+          <ellipse cx="210" cy="295" rx="145" ry="12" fill="rgba(0,0,0,0.22)" id="bike-shadow"/>
+
+          <!-- ==== BICYCLE COMPONENTS ==== -->
+          <g id="bicycle-group">
+            <!-- Back Wheel -->
+            <g id="back-wheel" transform="translate(100, 240)">
+              <!-- Tire -->
+              <circle cx="0" cy="0" r="48" fill="url(#tireGrad)" stroke="#1a237e" stroke-width="2"/>
+              <circle cx="0" cy="0" r="40" fill="none" stroke="url(#wheelRim)" stroke-width="4"/>
+              <circle cx="0" cy="0" r="10" fill="#cfd8dc" stroke="#455a64" stroke-width="2"/>
+              <!-- Spokes (animated rotation) -->
+              <g class="spokes-rotator" id="back-spokes">
+                <line x1="-38" y1="0" x2="38" y2="0" stroke="#b0bec5" stroke-width="1.8"/>
+                <line x1="0" y1="-38" x2="0" y2="38" stroke="#b0bec5" stroke-width="1.8"/>
+                <line x1="-27" y1="-27" x2="27" y2="27" stroke="#b0bec5" stroke-width="1.8"/>
+                <line x1="-27" y1="27" x2="27" y2="-27" stroke="#b0bec5" stroke-width="1.8"/>
+                <line x1="-35" y1="-15" x2="35" y2="15" stroke="#eceff1" stroke-width="1.2"/>
+                <line x1="-35" y1="15" x2="35" y2="-15" stroke="#eceff1" stroke-width="1.2"/>
+                <line x1="-15" y1="-35" x2="15" y2="35" stroke="#eceff1" stroke-width="1.2"/>
+                <line x1="15" y1="-35" x2="-15" y2="35" stroke="#eceff1" stroke-width="1.2"/>
+              </g>
+              <!-- Back Wheel Hub/Gear -->
+              <circle cx="0" cy="0" r="12" fill="#78909c" />
+              <circle cx="0" cy="0" r="5" fill="#37474f" />
+            </g>
+
+            <!-- Front Wheel -->
+            <g id="front-wheel" transform="translate(310, 240)">
+              <!-- Tire -->
+              <circle cx="0" cy="0" r="48" fill="url(#tireGrad)" stroke="#1a237e" stroke-width="2"/>
+              <circle cx="0" cy="0" r="40" fill="none" stroke="url(#wheelRim)" stroke-width="4"/>
+              <circle cx="0" cy="0" r="10" fill="#cfd8dc" stroke="#455a64" stroke-width="2"/>
+              <!-- Spokes (animated rotation) -->
+              <g class="spokes-rotator" id="front-spokes">
+                <line x1="-38" y1="0" x2="38" y2="0" stroke="#b0bec5" stroke-width="1.8"/>
+                <line x1="0" y1="-38" x2="0" y2="38" stroke="#b0bec5" stroke-width="1.8"/>
+                <line x1="-27" y1="-27" x2="27" y2="27" stroke="#b0bec5" stroke-width="1.8"/>
+                <line x1="-27" y1="27" x2="27" y2="-27" stroke="#b0bec5" stroke-width="1.8"/>
+                <line x1="-35" y1="-15" x2="35" y2="15" stroke="#eceff1" stroke-width="1.2"/>
+                <line x1="-35" y1="15" x2="35" y2="-15" stroke="#eceff1" stroke-width="1.2"/>
+                <line x1="-15" y1="-35" x2="15" y2="35" stroke="#eceff1" stroke-width="1.2"/>
+                <line x1="15" y1="-35" x2="-15" y2="35" stroke="#eceff1" stroke-width="1.2"/>
+              </g>
+              <!-- Hub -->
+              <circle cx="0" cy="0" r="10" fill="#78909c" />
+              <circle cx="0" cy="0" r="4" fill="#37474f" />
+            </g>
+
+            <!-- Mudguards (Fenders) -->
+            <path d="M 60 225 A 50 50 0 0 1 125 195" fill="none" stroke="#0091ea" stroke-width="6" stroke-linecap="round"/>
+            <path d="M 270 200 A 50 50 0 0 1 345 220" fill="none" stroke="#0091ea" stroke-width="6" stroke-linecap="round"/>
+
+            <!-- Bicycle Frame Tubes (Sporty Diamond Cruiser) -->
+            <g id="frame-tubes" stroke="url(#frameGrad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+              <!-- Rear Stays: Wheel Hub (100,240) to Seat Joint (170,175) and Bottom Bracket (195,240) -->
+              <line x1="100" y1="240" x2="170" y2="175" stroke="#00b0ff" stroke-width="6"/>
+              <line x1="100" y1="240" x2="195" y2="240" stroke="#0091ea" stroke-width="6"/>
+              <!-- Seat Tube: Bottom Bracket (195,240) to Seat Joint (170,175) -->
+              <line x1="195" y1="240" x2="170" y2="165" stroke-width="8"/>
+              <!-- Down Tube: Bottom Bracket (195,240) to Head Tube (280,165) -->
+              <line x1="195" y1="240" x2="280" y2="165" stroke-width="9"/>
+              <!-- Top Tube: Seat Joint (170,175) to Head Tube (280,165) -->
+              <line x1="170" y1="175" x2="280" y2="165" stroke-width="7"/>
+              <!-- Fork & Steerer: Front Hub (310,240) through Head Tube (280,165) to Stem (275,140) -->
+              <line x1="310" y1="240" x2="280" y2="165" stroke="#00b0ff" stroke-width="7"/>
+              <line x1="280" y1="165" x2="273" y2="135" stroke="#455a64" stroke-width="6"/>
+            </g>
+
+            <!-- Bike Chain -->
+            <line x1="100" y1="240" x2="195" y2="238" stroke="#37474f" stroke-dasharray="3,3" stroke-width="3"/>
+            <line x1="100" y1="243" x2="195" y2="245" stroke="#37474f" stroke-dasharray="3,3" stroke-width="3"/>
+
+            <!-- Saddle (Bike Seat) -->
+            <path d="M 145 162 C 160 160, 185 160, 195 166 C 180 172, 155 170, 145 162 Z" fill="#212121" stroke="#ffab00" stroke-width="1.5"/>
+            <rect x="168" y="165" width="5" height="15" fill="#78909c"/>
+
+            <!-- Handlebars & Vintage Bell -->
+            <path d="M 273 135 L 268 120 Q 262 108 275 108 L 290 110" fill="none" stroke="#546e7a" stroke-width="5" stroke-linecap="round"/>
+            <!-- Handlebar Grip -->
+            <path d="M 283 110 L 295 111" stroke="#ff6d00" stroke-width="6" stroke-linecap="round"/>
+            <!-- Bell on Handlebar -->
+            <g id="bike-bell-btn" class="clickable-part" transform="translate(268, 105)" style="cursor: pointer;">
+              <circle cx="0" cy="0" r="7" fill="#ffd600" stroke="#f57f17" stroke-width="1.5"/>
+              <circle cx="-1" cy="-1" r="2" fill="#fff" opacity="0.8"/>
+            </g>
+
+            <!-- Front Basket with Fish or Baguettes -->
+            <g id="basket" transform="translate(290, 125)">
+              <polygon points="0,0 26,-5 32,25 6,25" fill="#d7ccc8" stroke="#8d6e63" stroke-width="2"/>
+              <line x1="5" y1="5" x2="23" y2="22" stroke="#a1887f" stroke-width="1.5"/>
+              <line x1="22" y1="3" x2="8" y2="23" stroke="#a1887f" stroke-width="1.5"/>
+              <!-- Little caught fish sticking out of basket -->
+              <g id="basket-fish" transform="translate(14, 5) rotate(-25)">
+                <ellipse cx="0" cy="0" rx="9" ry="4.5" fill="#4fc3f7"/>
+                <polygon points="8,0 14,-4 14,4" fill="#0288d1"/>
+                <circle cx="-5" cy="-1" r="1.2" fill="#000"/>
+              </g>
+            </g>
+          </g>
+
+          <!-- ==== PELICAN RIDER (BODY & ANIMATED LEGS) ==== -->
+          <g id="pelican-group">
+            <!-- Back Leg (behind bike frame & pedals) -->
+            <g id="leg-back">
+              <path id="femur-back" d="M 180 185 L 180 215" stroke="#f57c00" stroke-width="6" stroke-linecap="round"/>
+              <path id="tibia-back" d="M 180 215 L 175 245" stroke="#ffa000" stroke-width="5" stroke-linecap="round"/>
+              <!-- Webbed foot -->
+              <polygon points="175,245 160,248 185,250" fill="#ff6f00"/>
+            </g>
+
+            <!-- Bottom Bracket Crankset (Rotates during pedal animation) -->
+            <g id="crank-group" transform="translate(195, 240)">
+              <!-- Chainring -->
+              <circle cx="0" cy="0" r="18" fill="#546e7a" stroke="#263238" stroke-width="2"/>
+              <circle cx="0" cy="0" r="12" fill="#90a4ae"/>
+              <circle cx="0" cy="0" r="4" fill="#263238"/>
+
+              <!-- Crank Arm Back -->
+              <g id="crank-arm-back">
+                <line x1="0" y1="0" x2="-18" y2="16" stroke="#cfd8dc" stroke-width="5" stroke-linecap="round"/>
+                <!-- Pedal Back -->
+                <rect x="-24" y="14" width="12" height="4" rx="2" fill="#212121"/>
+              </g>
+
+              <!-- Crank Arm Front -->
+              <g id="crank-arm-front">
+                <line x1="0" y1="0" x2="18" y2="-16" stroke="#eceff1" stroke-width="5" stroke-linecap="round"/>
+                <!-- Pedal Front -->
+                <rect x="12" y="-18" width="12" height="4" rx="2" fill="#37474f"/>
+              </g>
+            </g>
+
+            <!-- Front Leg (pedaling front crank) -->
+            <g id="leg-front">
+              <!-- Animated dynamically in JS/CSS or coordinated with crank -->
+              <path id="leg-front-path" d="M 185 185 Q 200 210 212 225" fill="none" stroke="#f57c00" stroke-width="7" stroke-linecap="round"/>
+              <path id="foot-front" d="M 212 225 L 225 222 L 220 228 Z" fill="#e65100"/>
+            </g>
+
+            <!-- Pelican Body Torso -->
+            <!-- Main feathered body with bounce -->
+            <g id="pelican-torso" class="torso-bounce">
+              <!-- Tail Feathers -->
+              <path d="M 140 185 C 120 185, 115 170, 130 160 C 135 170, 145 175, 150 178 Z" fill="#cfd8dc" stroke="#90a4ae" stroke-width="1.5"/>
+
+              <!-- Body Pear Shape -->
+              <path d="M 140 175 C 135 140, 160 120, 195 125 C 220 128, 230 155, 220 185 C 205 205, 165 205, 140 175 Z" fill="#ffffff" stroke="#b0bec5" stroke-width="2" filter="url(#shadowFilter)"/>
+              
+              <!-- Subtle Feather Accents -->
+              <path d="M 165 145 Q 155 160 170 170" fill="none" stroke="#eceff1" stroke-width="3" stroke-linecap="round"/>
+              <path d="M 180 148 Q 170 165 185 175" fill="none" stroke="#eceff1" stroke-width="3" stroke-linecap="round"/>
+
+              <!-- Wing holding Handlebar -->
+              <g id="pelican-wing">
+                <!-- Outer folded wing sweeping forward to handlebar -->
+                <path id="wing-shape" d="M 175 140 C 205 130, 245 120, 285 112 C 265 135, 230 165, 195 165 C 175 165, 165 152, 175 140 Z" fill="#f5f5f5" stroke="#90a4ae" stroke-width="2"/>
+                <!-- Wing Tips (Black feather tips characteristic of pelicans!) -->
+                <path d="M 270 115 C 280 113, 287 111, 285 112 C 280 122, 260 138, 250 145 C 256 135, 265 122, 270 115 Z" fill="#263238"/>
+              </g>
+
+              <!-- Pelican Neck (S-curve or upright alert posture) -->
+              <path d="M 205 130 C 220 110, 235 85, 245 65 C 255 70, 255 90, 225 125 Z" fill="#ffffff" stroke="#cfd8dc" stroke-width="1.5"/>
+
+              <!-- Pelican Head -->
+              <g id="pelican-head" class="head-bob">
+                <!-- Head Base -->
+                <circle cx="248" cy="62" r="22" fill="#ffffff" stroke="#b0bec5" stroke-width="1.5"/>
+
+                <!-- Stylish Cycling Cap / Sun Visor -->
+                <g id="pelican-cap">
+                  <path d="M 230 52 C 235 38, 260 38, 266 52 Z" fill="#00bcd4"/>
+                  <!-- Visor Brim -->
+                  <path d="M 252 50 L 285 45 Q 275 56 256 55 Z" fill="#ff4081"/>
+                  <circle cx="248" cy="38" r="3" fill="#ffeb3b"/>
+                </g>
+
+                <!-- Eye & Goggles -->
+                <g id="pelican-eye">
+                  <!-- Eye ring (yellow skin around pelican eye) -->
+                  <circle cx="254" cy="58" r="6" fill="#ffe082"/>
+                  <circle cx="255" cy="58" r="3.2" fill="#212121"/>
+                  <circle cx="256" cy="57" r="1.2" fill="#ffffff"/> <!-- Sparkle -->
+                </g>
+
+                <!-- Sunglasses / Cool Goggles (Toggleable) -->
+                <g id="pelican-shades" transform="translate(245, 52)">
+                  <path d="M 0,5 Q 10,0 20,4 Q 18,14 8,13 Q 0,11 0,5 Z" fill="#212121" opacity="0.95"/>
+                  <line x1="2" y1="6" x2="16" y2="12" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round"/>
+                  <line x1="-15" y1="5" x2="0" y2="5" stroke="#37474f" stroke-width="2"/>
+                </g>
+
+                <!-- GIANT PELICAN BEAK & THROAT POUCH (Iconic Feature!) -->
+                <!-- Upper Bill -->
+                <path id="upper-bill" d="M 264 58 L 365 72 C 372 73, 370 77, 362 78 L 268 74 Z" fill="url(#beakGrad)" stroke="#e65100" stroke-width="1.5"/>
+                <!-- Upper Bill Tip Hook -->
+                <path d="M 364 73 Q 370 75 365 80 Q 361 78 362 74 Z" fill="#d84315"/>
+
+                <!-- Throat Pouch (Gular Sac) - Stretches when catching fish! -->
+                <g id="throat-pouch-container">
+                  <path id="throat-pouch" d="M 265 74 Q 315 80 362 78 C 345 115, 280 120, 246 76 Z" fill="url(#pouchGrad)" stroke="#d84315" stroke-width="1.8"/>
+                  <!-- Pouch elastic veins/texture -->
+                  <path d="M 275 80 Q 305 105 330 84" fill="none" stroke="#f57c00" stroke-width="1" opacity="0.6"/>
+                  <path d="M 260 76 Q 285 105 310 82" fill="none" stroke="#f57c00" stroke-width="1" opacity="0.6"/>
+                </g>
+
+                <!-- Caught fish wriggling in pelican's mouth -->
+                <g id="pouch-fish-silhouette" opacity="0" transform="translate(290, 85) rotate(15)">
+                  <ellipse cx="0" cy="0" rx="14" ry="7" fill="#ffd54f" opacity="0.85"/>
+                  <polygon points="12,0 20,-6 20,6" fill="#ffb300"/>
+                  <circle cx="-7" cy="-2" r="1.5" fill="#3e2723"/>
+                </g>
+              </g>
+            </g>
+          </g>
+
+          <!-- Speed wind lines -->
+          <g id="wind-lines" opacity="0.4">
+            <line x1="380" y1="90" x2="415" y2="90" stroke="#b3e5fc" stroke-width="2" stroke-linecap="round"/>
+            <line x1="395" y1="110" x2="435" y2="110" stroke="#b3e5fc" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="370" y1="135" x2="405" y2="135" stroke="#b3e5fc" stroke-width="1.8" stroke-linecap="round"/>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Action Floating Prompts -->
+      <div class="action-hint" id="action-hint">按 [空格键] 或 [点击屏幕] 踩脚踏板加速！</div>
+    </main>
+
+    <!-- Bottom Controls & Interactions Dashboard -->
+    <footer class="controls-panel">
+      <div class="control-group buttons-main">
+        <button class="btn btn-pedal" id="btn-pedal" title="踩脚踏加速 (空格键)">
+          <span class="btn-icon">⚡</span>
+          <span class="btn-text">
+            <strong>踩脚踏板</strong>
+            <small>加速冲刺 (Space)</small>
+          </span>
+        </button>
+
+        <button class="btn btn-bell" id="btn-bell" title="按响清脆车铃 (按键 B)">
+          <span class="btn-icon">🔔</span>
+          <span class="btn-text">
+            <strong>叮铃铃~</strong>
+            <small>车铃音效 (B)</small>
+          </span>
+        </button>
+
+        <button class="btn btn-quack" id="btn-quack" title="鹈鹕大声叫喊 (按键 Q)">
+          <span class="btn-icon">📢</span>
+          <span class="btn-text">
+            <strong>鹈鹕嘎嘎叫</strong>
+            <small>大嘴鸣笛 (Q)</small>
+          </span>
+        </button>
+
+        <button class="btn btn-shades" id="btn-shades" title="切换帅气墨镜 (按键 G)">
+          <span class="btn-icon">😎</span>
+          <span class="btn-text">
+            <strong>潮流墨镜</strong>
+            <small>佩戴 / 摘下 (G)</small>
+          </span>
+        </button>
+
+        <button class="btn btn-theme" id="btn-theme" title="切换昼夜 (按键 T)">
+          <span class="btn-icon" id="theme-icon">🌅</span>
+          <span class="btn-text">
+            <strong id="theme-text">昼夜切换</strong>
+            <small>落日海滩 (T)</small>
+          </span>
+        </button>
+      </div>
+
+      <!-- Gear / Speed slider -->
+      <div class="gear-section">
+        <label for="gear-slider">变速齿轮档位: <strong id="gear-num">3 档</strong></label>
+        <input type="range" id="gear-slider" min="1" max="5" value="3" step="1">
+        <div class="gear-marks">
+          <span>1 慢悠</span>
+          <span>2 漫游</span>
+          <span>3 巡航</span>
+          <span>4 飞驰</span>
+          <span>5 极限风暴</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,590 @@
+:root {
+  --sky-gradient: linear-gradient(180deg, #38bdf8 0%, #bae6fd 60%, #fed7aa 95%);
+  --sea-top: #0284c7;
+  --sea-bottom: #0369a1;
+  --road-color: #334155;
+  --road-curb: #64748b;
+  --sun-color: #fde047;
+  --sun-glow: rgba(253, 224, 71, 0.4);
+  --text-primary: #0f172a;
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --accent-color: #0284c7;
+  --theme-transition: all 0.8s ease-in-out;
+}
+
+[data-theme="sunset"] {
+  --sky-gradient: linear-gradient(180deg, #4c1d95 0%, #c026d3 35%, #f97316 70%, #fde047 98%);
+  --sea-top: #7c2d12;
+  --sea-bottom: #431407;
+  --road-color: #1e293b;
+  --road-curb: #475569;
+  --sun-color: #fb923c;
+  --sun-glow: rgba(251, 146, 60, 0.5);
+  --text-primary: #ffffff;
+  --bg-card: rgba(15, 23, 42, 0.9);
+}
+
+[data-theme="night"] {
+  --sky-gradient: linear-gradient(180deg, #090d16 0%, #0f172a 50%, #1e1b4b 100%);
+  --sea-top: #0f172a;
+  --sea-bottom: #020617;
+  --road-color: #0f172a;
+  --road-curb: #334155;
+  --sun-color: #f8fafc;
+  --sun-glow: rgba(248, 250, 252, 0.3);
+  --text-primary: #f8fafc;
+  --bg-card: rgba(15, 23, 42, 0.92);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #0f172a;
+  color: var(--text-primary);
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.app-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Header & Stat Cards */
+.game-header {
+  position: absolute;
+  top: 16px;
+  left: 24px;
+  right: 24px;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+.title-wrap h1 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.title-wrap h1 span {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  background: #0284c7;
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  letter-spacing: 1px;
+}
+
+.title-wrap .subtitle {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  opacity: 0.9;
+  margin-top: 3px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.stats-bar {
+  display: flex;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+.stat-badge {
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  padding: 8px 18px;
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: transform 0.2s;
+}
+
+.stat-badge:hover {
+  transform: translateY(-2px);
+}
+
+.stat-badge.highlight {
+  border-left: 4px solid #f59e0b;
+}
+
+.stat-badge .label {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+[data-theme="sunset"] .stat-badge .label,
+[data-theme="night"] .stat-badge .label {
+  color: #94a3b8;
+}
+
+.stat-badge .value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Main Viewport */
+.viewport {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--sky-gradient);
+  transition: var(--theme-transition);
+}
+
+/* Background Elements */
+.sky-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.celestial-body {
+  position: absolute;
+  top: 35px;
+  right: 140px;
+  width: 72px;
+  height: 72px;
+  background: var(--sun-color);
+  border-radius: 50%;
+  box-shadow: 0 0 50px var(--sun-glow);
+  transition: var(--theme-transition);
+}
+
+[data-theme="night"] .celestial-body {
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.45);
+}
+
+.cloud-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 45%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cloud {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.78);
+  border-radius: 50px;
+  filter: blur(1px);
+}
+
+.sea-layer {
+  position: absolute;
+  bottom: 110px;
+  left: 0;
+  width: 100%;
+  height: 180px;
+  background: linear-gradient(180deg, var(--sea-top) 0%, var(--sea-bottom) 100%);
+  transition: var(--theme-transition);
+  overflow: hidden;
+}
+
+.wave {
+  position: absolute;
+  width: 200%;
+  height: 35px;
+  background: repeat-x;
+  background-size: 90px 35px;
+  opacity: 0.35;
+}
+
+.wave1 {
+  top: 6px;
+  animation: waveMotion 4s linear infinite;
+  background-image: radial-gradient(circle at 45px -12px, transparent 38px, rgba(255, 255, 255, 0.65) 40px);
+}
+
+.wave2 {
+  top: 28px;
+  animation: waveMotion 6s linear infinite reverse;
+  opacity: 0.22;
+  background-image: radial-gradient(circle at 45px -12px, transparent 38px, rgba(255, 255, 255, 0.45) 40px);
+}
+
+@keyframes waveMotion {
+  from { transform: translateX(0); }
+  to { transform: translateX(-90px); }
+}
+
+.distant-islands {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  opacity: 0.35;
+  background: radial-gradient(ellipse 200px 50px at 15% 100%, #1e293b 80%, transparent 100%),
+              radial-gradient(ellipse 300px 65px at 60% 100%, #1e293b 80%, transparent 100%),
+              radial-gradient(ellipse 250px 50px at 90% 100%, #1e293b 80%, transparent 100%);
+}
+
+.lighthouse {
+  position: absolute;
+  bottom: 15px;
+  right: 22%;
+  width: 20px;
+  height: 55px;
+  background: #ffffff;
+  clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);
+  opacity: 0.7;
+}
+
+.lighthouse::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -25px;
+  width: 70px;
+  height: 30px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255,255,200,0.85), transparent 70%);
+  animation: beaconPulse 2.5s infinite ease-in-out;
+}
+
+@keyframes beaconPulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.95; }
+}
+
+/* Road & Scenery Layer */
+.scenery-layer {
+  position: absolute;
+  bottom: 110px;
+  left: 0;
+  width: 100%;
+  height: 180px;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.scenery-item {
+  position: absolute;
+  bottom: 0;
+  will-change: transform;
+}
+
+.road-layer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 110px;
+}
+
+.road-surface {
+  width: 100%;
+  height: 100%;
+  background: var(--road-color);
+  position: relative;
+  overflow: hidden;
+}
+
+.road-curb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 12px;
+  background: repeating-linear-gradient(90deg, #e2e8f0 0px, #e2e8f0 35px, #ef4444 35px, #ef4444 70px);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+}
+
+.road-stripe {
+  position: absolute;
+  top: 50px;
+  height: 8px;
+  background: #facc15;
+  border-radius: 4px;
+}
+
+/* Collectibles */
+.collectibles-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.collectible-fish {
+  position: absolute;
+  width: 44px;
+  height: 28px;
+  will-change: transform;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+  animation: fishSwim 0.6s infinite alternate ease-in-out;
+}
+
+@keyframes fishSwim {
+  0% { transform: translateY(-3px) rotate(-4deg); }
+  100% { transform: translateY(3px) rotate(4deg); }
+}
+
+/* Notifications */
+.notifications-layer {
+  position: absolute;
+  top: 30%;
+  left: 45%;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.floating-msg {
+  position: absolute;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #f59e0b;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 0 12px #ffffff;
+  animation: floatUp 1.2s forwards cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+@keyframes floatUp {
+  0% { opacity: 0; transform: translateY(10px) scale(0.7); }
+  25% { opacity: 1; transform: translateY(-10px) scale(1.15); }
+  100% { opacity: 0; transform: translateY(-60px) scale(1); }
+}
+
+/* Pelican Bike Character: Perfect Road Grounding */
+.pelican-bike-container {
+  position: absolute;
+  bottom: 38px; /* Tightly aligns wheels on road */
+  left: 15%;
+  width: 380px;
+  height: 290px;
+  z-index: 20;
+  transform-origin: center bottom;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (max-width: 768px) {
+  .pelican-bike-container {
+    width: 290px;
+    height: 220px;
+    left: 8%;
+    bottom: 30px;
+  }
+}
+
+.pelican-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.2));
+}
+
+/* Bobbing Animations */
+.torso-bounce {
+  transform-origin: 195px 230px;
+  animation: pelicanTorsoBob 0.6s infinite ease-in-out alternate;
+}
+
+.head-bob {
+  transform-origin: 220px 120px;
+  animation: pelicanHeadBob 0.6s infinite ease-in-out alternate;
+}
+
+@keyframes pelicanTorsoBob {
+  0% { transform: translateY(0px) rotate(0deg); }
+  100% { transform: translateY(-3px) rotate(1deg); }
+}
+
+@keyframes pelicanHeadBob {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-2deg); }
+}
+
+/* Sprinting shake */
+.pelican-bike-container.sprinting {
+  animation: sprintShake 0.15s infinite alternate linear;
+}
+
+@keyframes sprintShake {
+  0% { transform: translateY(-2px) scale(1.02); }
+  100% { transform: translateY(1px) scale(1.02); }
+}
+
+.action-hint {
+  position: absolute;
+  bottom: 125px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  padding: 7px 18px;
+  border-radius: 9999px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  animation: pulseHint 2s infinite ease-in-out;
+  pointer-events: none;
+  z-index: 30;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+@keyframes pulseHint {
+  0%, 100% { opacity: 0.75; transform: translateX(-50%) scale(1); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.04); }
+}
+
+/* Controls Panel */
+.controls-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  padding: 14px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid rgba(226, 232, 240, 0.4);
+  z-index: 100;
+  transition: var(--theme-transition);
+}
+
+.buttons-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="sunset"] .btn,
+[data-theme="night"] .btn {
+  background: #1e293b;
+  color: #f8fafc;
+  border-color: #334155;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+.btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.btn-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.btn-text strong {
+  font-size: 0.92rem;
+}
+
+.btn-text small {
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+
+/* Specific button styles */
+.btn-pedal {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+}
+
+.btn-pedal:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+}
+
+.btn-bell {
+  border-color: #fde047;
+}
+
+/* Gear Slider Section */
+.gear-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 520px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.gear-section label {
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: #0284c7;
+  cursor: pointer;
+  height: 6px;
+  border-radius: 4px;
+}
+
+.gear-marks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #64748b;
+  padding: 0 4px;
+}
+
+[data-theme="sunset"] .gear-marks,
+[data-theme="night"] .gear-marks {
+  color: #94a3b8;
+}
